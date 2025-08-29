@@ -78,16 +78,4 @@ Digite sua pergunta (ou "sair")
 
 > Dica: termos como *artista, faixa, gênero, álbum* puxam SQLite; *book/livro/nome de economistas* puxam documentos; *http, web, curl* puxam bash.
 
-## Segurança
 
-* **SQL somente SELECT**, com LIMIT automático.
-* **Bash somente `curl -s`**, sem pipes/redirecionamentos; sempre com confirmação.
-
-## Troubleshooting
-
-* **`initialValueFactory is not a function`**
-  Use `default: () => ...` nos canais do LangGraph.
-* **`Branch condition returned unknown or null destination`**
-  Garanta que os canais usem reducers `(prev, next) => next` e que o roteador atribua `route`.
-* **Sem resultados para preço**
-  Sua base precisa ter coluna de preço (`UnitPrice` em `Track` no Chinook). Os fallbacks já tentam detectar nomes alternativos.
