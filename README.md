@@ -1,84 +1,93 @@
-# Multi-Source AI Agent Challenge
+# Multi-Source AI Agent
 
-## Challenge Overview
+Agente conversacional em Node.js que responde perguntas combinando **SQLite**, **documentos `.txt`** e **web (via bash `curl`)** com aprovação do usuário. Orquestrado com **LangGraph**, LLM via **LangChain**.
 
-Welcome to the Multi-Source AI Agent Challenge! In this project, you'll build an intelligent agent using Node.js and modern LLM frameworks that can answer questions by leveraging multiple data sources including SQLite databases, document files, and web content via bash commands.
+## Requisitos
 
-## Challenge Requirements
+* Node 18+ (testado em Node 20)
+* Uma chave da OpenAI em `OPENAI_API_KEY`
 
-### Technology Stack
-- Node.js
-- [LangChain](https://js.langchain.com/docs/) - For LLM integration and chains
-- [LangGraph](https://js.langchain.com/docs/langgraph/) - For agent workflow orchestration
+## Instalação
 
-### Core Features
-Your AI agent must be able to:
+```bash
+git clone <seu-fork>
+cd hiring-challenge-alpha
+cp .env.example .env       # preencha OPENAI_API_KEY
+npm install
+```
 
-1. **Answer questions using multiple data sources:**
-   - **SQLite databases**: The agent should query `.db` files placed in the `data/sqlite` folder
-   - **Document context**: The agent should extract information from `.txt` files in the `data/documents` folder
-   - **External data**: The agent should be able to run bash commands (with user approval) to gather additional data (e.g., using `curl` to fetch web content)
+## Estrutura
 
-2. **Implement a conversational interface** - either in the browser or terminal
+```
+data/
+  documents/
+    economy_books.txt
+  sqlite/
+    music.db
+src/
+  index.js
+.env (.env.example)
+package.json
+```
 
-3. **Provide intelligent routing** - decide which data source is most appropriate for each question and use the right tools accordingly
+## Executar
 
-### Minimum Viable Product
-Your solution must demonstrate:
+```bash
+npm start
+```
 
-- A functional agent that can respond to user questions
-- Proper routing between different data sources
-- A clear execution flow with user approval for bash commands
-- Meaningful responses that integrate information from multiple sources when needed
+Você verá:
 
-## Submission Guidelines
+```
+Multi-Source Agent (gpt-4o-mini)
+Docs: .../data/documents
+DBs : .../data/sqlite
+Digite sua pergunta (ou "sair")
+```
 
-1. Fork this repository
-2. Implement your solution
-3. Submit a pull request with your implementation
-4. Include detailed instructions on how to run and test your solution
-5. Your code must be 100% functional
+## Como funciona
 
-## Evaluation Criteria
+* **Roteamento**: uma heurística decide entre `sqlite`, `documents`, `bash` ou `combine`.
+* **SQLite**: 
 
-Your submission will be evaluated based on:
+  * *Preço médio das faixas por gênero*
+  * *Quantidade de músicas em álbuns “Greatest Hits”*
+* **Documentos**: busca trechos relevantes em `.txt`.
+* **Bash**: propõe `curl -s <URL>` e **pede sua aprovação** antes de executar.
 
-- **Functionality**: Does it work as expected? Can it correctly use all three data sources?
-- **Code Quality**: Is the code well-organized, commented, and following best practices?
-- **Error Handling**: How does the agent handle edge cases and errors?
-- **User Experience**: Is the conversation with the agent natural and helpful?
-- **Documentation**: Is the setup and usage well documented?
+## Testes sugeridos
 
-## Setup Instructions
+**SQLite**
 
-Include detailed instructions on how to set up and run your solution. For example:
+* “Quais são os 5 artistas com mais faixas?”
+* “Preço médio das faixas por gênero”
+* “Quantas músicas tem o álbum Greatest Hits?”
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Configure environment variables (copy `.env.example` to `.env` and fill in required values)
-4. Add sample databases to the `sqlite` folder
-5. Add sample documents to the `documents` folder
-6. Start the agent: `npm start`
+**Documentos**
 
-## Testing Your Implementation
+* “Quem escreveu ‘A Riqueza das Nações’?”
+* “Explique a tese de Piketty sobre desigualdade.”
 
-Your README should include instructions on how to test the agent functionality, such as:
+**Bash (com aprovação)**
 
-1. Sample questions that query SQLite databases
-2. Sample questions that require document context
-3. Sample questions that would trigger bash commands (and how to approve them)
-4. Examples of questions that combine multiple data sources
+* “Baixe o HTML de [https://example.com](https://example.com) e resuma o título.”
 
-## Resources
+**Combine (múltiplas fontes)**
 
-- [LangChain JS Documentation](https://js.langchain.com/docs/)
-- [LangGraph Documentation](https://js.langchain.com/docs/langgraph/)
-- [SQLite in Node.js Guide](https://www.sqlitetutorial.net/sqlite-nodejs/)
+* “Resuma a tese de Piketty e mostre também os 3 artistas com mais faixas.”
 
-## License
+> Dica: termos como *artista, faixa, gênero, álbum* puxam SQLite; *book/livro/nome de economistas* puxam documentos; *http, web, curl* puxam bash.
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Segurança
 
----
+* **SQL somente SELECT**, com LIMIT automático.
+* **Bash somente `curl -s`**, sem pipes/redirecionamentos; sempre com confirmação.
 
-Good luck with your implementation! We're excited to see your creative solutions to this challenge.
+## Troubleshooting
+
+* **`initialValueFactory is not a function`**
+  Use `default: () => ...` nos canais do LangGraph.
+* **`Branch condition returned unknown or null destination`**
+  Garanta que os canais usem reducers `(prev, next) => next` e que o roteador atribua `route`.
+* **Sem resultados para preço**
+  Sua base precisa ter coluna de preço (`UnitPrice` em `Track` no Chinook). Os fallbacks já tentam detectar nomes alternativos.
